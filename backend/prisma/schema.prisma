@@ -1,0 +1,55 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Book {
+  id          String      @id @default(uuid())
+  title       String
+  author      String
+  description String
+  price       Float
+  stock       Int
+  coverImage  String?
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[] // Added back-relation for order items
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  totalAmount Float
+  user        User        @relation(fields: [userId], references: [id])
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[] // Links this order to its individual items
+}
+
+model OrderItem {
+  id              String @id @default(uuid())
+  orderId         String
+  bookId          String
+  quantity        Int
+  priceAtPurchase Float
+  order           Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  book            Book   @relation(fields: [bookId], references: [id])
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
